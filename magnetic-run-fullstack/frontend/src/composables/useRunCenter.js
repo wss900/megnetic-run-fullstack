@@ -1,6 +1,9 @@
 import { ref, computed, watch } from 'vue'
 import axios from 'axios'
 
+const apiBase = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '')
+const http = axios.create({ baseURL: apiBase || undefined })
+
 const steps = ref([])
 const error = ref('')
 const loadingList = ref(true)
@@ -55,7 +58,10 @@ watch(category, () => {
 function apiErrorMessage(e) {
   const status = e.response?.status
   if (status === 502 || status === 503 || status === 504) {
-    return `网关错误（${status}）：多为本机 API 未启动。请运行 start-backend.cmd，打开 http://127.0.0.1:8000/docs 后再刷新。`
+    return `网关错误（${status}）：多为 API 未启动或未配置。本地请运行 start-backend.cmd；线上请在构建环境变量中设置 VITE_API_BASE 指向已部署的后端。`
+  }
+  if (status === 404) {
+    return `未找到接口（404）：静态站点上没有 /api。请部署 backend（FastAPI）并设置 VITE_API_BASE，或确认后端路由与代理配置。`
   }
   const d = e.response?.data?.detail
   if (typeof d === 'string') return d
@@ -67,7 +73,12 @@ async function fetchSteps() {
   error.value = ''
   loadingList.value = true
   try {
-    const { data } = await axios.get('/api/steps')
+    const { data } = await http.get('/api/steps')
+    if (!Array.isArray(data)) {
+      error.value = '步骤接口返回了非列表数据，请检查后端 /api/steps。'
+      steps.value = []
+      return
+    }
     steps.value = data
   } catch (e) {
     error.value = apiErrorMessage(e)
@@ -85,7 +96,7 @@ async function run() {
     fd.append('step_id', stepId.value)
     fd.append('params_json', JSON.stringify(paramValues.value))
     for (const f of fileList.value) fd.append('files', f)
-    const { data } = await axios.post('/api/runs', fd)
+    const { data } = await http.post('/api/runs', fd)
     result.value = data
   } catch (e) {
     error.value = apiErrorMessage(e)

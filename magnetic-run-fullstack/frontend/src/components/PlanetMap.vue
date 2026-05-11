@@ -82,6 +82,14 @@ function selectCat(c) {
         </button>
       </section>
     </div>
+
+    <div v-else class="map__empty">
+      <p class="map__empty-title">暂无可用步骤</p>
+      <p class="map__empty-hint">
+        静态网页托管（如 EdgeOne Pages）本身不提供 <code>/api</code> 接口。请在腾讯云部署 FastAPI 后端，并在构建时设置环境变量
+        <code>VITE_API_BASE</code> 为后端根地址（例如 <code>https://api.example.com</code>），同时在该后端放行本站域名的 CORS。
+      </p>
+    </div>
   </div>
 </template>
 
@@ -129,6 +137,35 @@ function selectCat(c) {
   color: #ff6b9d;
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.map__empty {
+  max-width: 40rem;
+  padding: 1.5rem 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: rgba(200, 210, 230, 0.88);
+}
+
+.map__empty-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e8ecf4;
+}
+
+.map__empty-hint {
+  margin: 0;
+  color: rgba(180, 195, 220, 0.8);
+}
+
+.map__empty code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82em;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  background: rgba(0, 255, 240, 0.08);
+  color: rgba(0, 255, 240, 0.9);
 }
 
 .map__body {

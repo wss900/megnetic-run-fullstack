@@ -1,0 +1,16 @@
+#!/bin/bash
+# CloudBase / SCF HTTP 云函数启动脚本：与 backend/、magrun/ 放在 zip 根目录一同上传。
+# 换行须为 LF；在 Linux 或 WSL 下可执行 chmod +x scf_bootstrap 后再打包。
+set -euo pipefail
+cd "$(dirname "$0")"
+export PYTHONPATH="${PYTHONPATH}:."
+
+if [ -x "/var/lang/python310/bin/python3.10" ]; then
+  PY="/var/lang/python310/bin/python3.10"
+elif [ -x "/var/lang/python311/bin/python3.11" ]; then
+  PY="/var/lang/python311/bin/python3.11"
+else
+  PY="python3"
+fi
+
+exec "$PY" -m uvicorn backend.main:app --host 0.0.0.0 --port 9000
