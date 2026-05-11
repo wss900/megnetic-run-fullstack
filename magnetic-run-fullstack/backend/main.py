@@ -11,6 +11,8 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -22,6 +24,22 @@ from magrun.runner import load_steps
 app = FastAPI(title="RunCenter API", version="0.1.0")
 
 
+class HttpRoutePrefixMiddleware(BaseHTTPMiddleware):
+    """CloudBase HTTP 访问路由为 /my-api 且开启路径透传时，请求 path 为 /my-api/api/...，需去掉前缀才能命中路由。"""
+
+    def __init__(self, app, prefix: str):
+        super().__init__(app)
+        self.prefix = prefix.rstrip("/") if prefix else ""
+
+    async def dispatch(self, request: Request, call_next):
+        if not self.prefix:
+            return await call_next(request)
+        path = request.scope.get("path", "")
+        if path == self.prefix or path.startswith(self.prefix + "/"):
+            request.scope["path"] = path[len(self.prefix) :] or "/"
+        return await call_next(request)
+
+
 def _cors_origins() -> list[str]:
     """本地默认 Vite；线上设置环境变量 CORS_ORIGINS，逗号分隔，如 https://xxx.tcloudbaseapp.com"""
     raw = os.getenv("CORS_ORIGINS", "").strip()
@@ -30,6 +48,7 @@ def _cors_origins() -> list[str]:
     return ["http://127.0.0.1:5173", "http://localhost:5173"]
 
 
+_route_prefix = os.getenv("HTTP_ROUTE_PREFIX", "").strip()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(),
@@ -37,6 +56,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(HttpRoutePrefixMiddleware, prefix=_route_prefix)
 
 
 class StepParamOut(BaseModel):
