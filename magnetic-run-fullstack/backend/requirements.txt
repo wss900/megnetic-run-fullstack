@@ -1,5 +1,6 @@
 fastapi>=0.115
 uvicorn[standard]>=0.32
+exceptiongroup>=1.2.0
 python-multipart>=0.0.9
 pandas>=2.2
 numpy>=2.0

@@ -1,3 +1,5 @@
+deploy/cloudbase/cloudfunctions/
+deploy/cloudbase/scf_site_packages/
 backend/.venv/
 frontend/node_modules/
 frontend/dist/

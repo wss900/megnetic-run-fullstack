@@ -1,9 +1,25 @@
 #!/bin/bash
-# CloudBase / SCF HTTP 云函数启动脚本：与 backend/、magrun/ 放在 zip 根目录一同上传。
-# 换行须为 LF；在 Linux 或 WSL 下可执行 chmod +x scf_bootstrap 后再打包。
+# CloudBase / SCF HTTP 云函数启动脚本：与 backend/、magrun/、scf_site_packages/ 放在 zip 根目录一同上传。
+# 换行须为 LF（仅 \\n）。若变成 CRLF，Linux 会报 [./scf_bootstrap] no such file or directory。
+# 依赖由本地 install-scf-site-packages.ps1 打进 scf_site_packages（云上「在线安装」与自定义 bootstrap 组合不可靠）。
+#
+# tcb 上传后常见布局：/var/user/scf_site_packages、/var/user/cloudfunctions/<函数名>/backend。
+# 须把「含 backend 的目录」和「含 scf_site_packages 的目录」都加入 PYTHONPATH。
 set -euo pipefail
-cd "$(dirname "$0")"
-export PYTHONPATH="${PYTHONPATH}:."
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+USER_ROOT="$HERE"
+CODE_ROOT="$HERE"
+
+if [ ! -d "$CODE_ROOT/backend" ] && [ -d "$HERE/cloudfunctions" ]; then
+  sub=$(find "$HERE/cloudfunctions" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1)
+  if [ -n "$sub" ] && [ -d "$sub/backend" ]; then
+    CODE_ROOT="$sub"
+  fi
+fi
+
+cd "$CODE_ROOT"
+export PYTHONPATH="$USER_ROOT/scf_site_packages${PYTHONPATH:+:$PYTHONPATH}:$CODE_ROOT:$USER_ROOT"
 
 if [ -x "/var/lang/python310/bin/python3.10" ]; then
   PY="/var/lang/python310/bin/python3.10"
