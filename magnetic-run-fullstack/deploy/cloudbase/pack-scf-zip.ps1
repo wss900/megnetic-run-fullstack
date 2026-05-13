@@ -7,6 +7,7 @@
 # 控制台需配（云函数环境变量）:
 #   HTTP_ROUTE_PREFIX=/my-api
 #   CORS_ORIGINS=https://你的静态站域名.tcloudbaseapp.com
+#   SKIP_APP_CORS=1  （避免与 tcbgw 网关跨域头重复合并导致浏览器 Network Error）
 # 超时建议 >= 60s；内存按套餐加大；开启「自动安装依赖」并保证根目录有 requirements.txt
 
 $ErrorActionPreference = "Stop"

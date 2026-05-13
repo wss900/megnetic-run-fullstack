@@ -107,7 +107,8 @@ cmd /c "echo.| npx --yes --package=@cloudbase/cli tcb fn code update apihd --dir
 | 变量名 | 示例值 | 说明 |
 |--------|--------|------|
 | `HTTP_ROUTE_PREFIX` | `/my-api` | 与网关暴露路径一致；后端中间件会剥掉此前缀。 |
-| `CORS_ORIGINS` | `https://<你的默认域名>.tcloudbaseapp.com` | 多个用英文逗号分隔；需包含静态站完整来源（含路径末级时按控制台要求配置）。 |
+| `CORS_ORIGINS` | 见下 | **CloudBase HTTP + 网关已开跨域时建议留空**，否则易与网关合并出非法的 `Access-Control-Allow-Origin`（逗号拼接），浏览器表现为 **Network Error**。静态站域名请在控制台「安全域名 / HTTP 访问跨域」中配置。仅本地或其它无网关注入场景再填 `https://…` 列表（逗号分隔）。 |
+| `SKIP_APP_CORS` | `1` | 关闭 FastAPI 内 `CORSMiddleware`，由网关处理 CORS；与上条配合使用。 |
 
 超时、内存建议在控制台适当加大；大依赖包冷启动可能较慢。
 
@@ -157,7 +158,7 @@ cd deploy\cloudbase
 
 ### C. 改后端路由或中间件
 
-- 入口 **`backend/main.py`**；CloudBase 下注意 **`HTTP_ROUTE_PREFIX`** 与 **`CORS_ORIGINS`**。  
+- 入口 **`backend/main.py`**；CloudBase 下注意 **`HTTP_ROUTE_PREFIX`**、**`SKIP_APP_CORS`**，以及 **`CORS_ORIGINS` 是否与网关跨域重复**（见上表）。  
 - 若新增依赖，同 **A.4**。
 
 ### D. 改云端路由或环境 ID

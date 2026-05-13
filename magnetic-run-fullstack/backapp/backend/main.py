@@ -49,13 +49,17 @@ def _cors_origins() -> list[str]:
 
 
 _route_prefix = os.getenv("HTTP_ROUTE_PREFIX", "").strip()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CloudBase HTTP 网关（tcbgw）在「开启跨域」时会自行加 CORS；若应用内再用 CORSMiddleware，
+# 网关会把多份 Access-Control-* 合并成非法值（如 allow-origin 出现逗号拼接），浏览器报 Network Error。
+_skip_app_cors = os.getenv("SKIP_APP_CORS", "").strip().lower() in ("1", "true", "yes")
+if not _skip_app_cors:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins(),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 app.add_middleware(HttpRoutePrefixMiddleware, prefix=_route_prefix)
 
 
